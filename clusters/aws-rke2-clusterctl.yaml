@@ -163,7 +163,7 @@ apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: AWSClusterControllerIdentity
 metadata:
   name: default
-  namespace: default
+  defaultNamespace: default
 spec:
   allowedNamespaces:
     list:
