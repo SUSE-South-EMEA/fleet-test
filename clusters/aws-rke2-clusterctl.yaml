@@ -3,6 +3,11 @@ kind: Cluster
 metadata:
   name: rke2-aws
   namespace: default
+  labels:
+    app.kubernetes.io/managed-by: "fleet"
+  annotations:
+    meta.helm.sh/release-name: "test-cluster"
+    meta.helm.sh/release-namespace: "default"
 spec:
   clusterNetwork:
     pods:
