@@ -1,19 +1,13 @@
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: Cluster
 metadata:
-  name: k3s-cluster
+  name: edge-cluster
   namespace: default
+  labels:
+    location: location1
 spec:
-  clusterClassName: k3s
-  topology:
-    version: "v1.28.5+k3s1"
-    controlPlane:
-      replicas: 3
-    variables:
-      - name: controlPlaneEndpointHost
-        value: "example.com"
-      - name: controlPlaneEndpointPort
-        value: 6443
-      - name: k3sVersion
-        value: "v1.28.5+k3s1"
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: ElementalCluster
+    name: rancher-cluster
 

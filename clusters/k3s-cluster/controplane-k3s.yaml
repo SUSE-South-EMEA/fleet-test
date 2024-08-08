@@ -1,0 +1,13 @@
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KThreesControlPlane
+metadata:
+  name: edge-cluster-control-plane
+  namespace: default
+spec:
+  version: "v1.28.12+k3s1"
+  replicas: 1
+  infrastructureTemplate:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: ElementalMachineTemplate
+    name: rancher-cp-machine-template
+
