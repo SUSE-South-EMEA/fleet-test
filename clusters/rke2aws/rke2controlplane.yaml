@@ -1,0 +1,15 @@
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: RKE2ControlPlane
+metadata:
+  name: my-rke2-cluster-control-plane
+  namespace: default
+spec:
+  serverConfig:
+    disable: {}
+  version: "v1.28.12+rke2r1"
+  replicas: 1
+  infrastructureTemplate:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: AWSMachineTemplate
+    name: my-rke2-cluster-control-plane-template
+
