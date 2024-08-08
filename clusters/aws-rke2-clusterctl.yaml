@@ -103,7 +103,7 @@ spec:
     spec:
       ami:
         id: ami-046dea9abe59cb74f
-      iamInstanceProfile: control-plane.cluster-api-provider-aws.sigs.k8s.io
+      iamInstanceProfile: control-plane-cluster-api-provider-aws-sigs-k8s-io
       instanceType: t3a.large
       rootVolume:
         size: 50
@@ -147,7 +147,7 @@ spec:
     spec:
       ami:
         id: ami-046dea9abe59cb74f
-      iamInstanceProfile: nodes.cluster-api-provider-aws.sigs.k8s.io
+      iamInstanceProfile: nodes-cluster-api-provider-aws-sigs-k8s-io
       instanceType: t3a.large
       rootVolume:
         size: 50
