@@ -1,0 +1,170 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: rke2-aws
+  namespace: default
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: RKE2ControlPlane
+    name: rke2-aws-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+    kind: AWSCluster
+    name: rke2-aws
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+kind: AWSCluster
+metadata:
+  name: rke2-aws
+  namespace: default
+spec:
+  bastion:
+    enabled: true
+  controlPlaneLoadBalancer:
+    additionalListeners:
+    - port: 9345
+      protocol: TCP
+    ingressRules:
+    - description: RKE2 Control Plane
+      fromPort: 9345
+      protocol: tcp
+      sourceSecurityGroupRoles:
+      - node
+      - controlplane
+      toPort: 9345
+    - cidrBlocks:
+      - 0.0.0.0/0
+      description: Kubernetes API
+      fromPort: 6443
+      protocol: tcp
+      toPort: 6443
+    loadBalancerType: nlb
+  network:
+    additionalControlPlaneIngressRules:
+    - description: RKE2 Control Plane additional group
+      fromPort: 9345
+      protocol: tcp
+      sourceSecurityGroupRoles:
+      - node
+      - controlplane
+      toPort: 9345
+    vpc:
+      availabilityZoneUsageLimit: 1
+  region: eu-central-1
+  sshKeyName: SuseKeyPair
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: RKE2ControlPlane
+metadata:
+  name: rke2-aws-control-plane
+  namespace: default
+spec:
+  agentConfig:
+    airGapped: true
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+    kind: AWSMachineTemplate
+    name: rke2-aws-control-plane
+  nodeDrainTimeout: 2m
+  preRKE2Commands:
+  - sudo hostnamectl set-hostname $(curl -s http://169.254.169.254/1.0/meta-data/hostname)
+  registrationMethod: internal-first
+  replicas: 1
+  rolloutStrategy:
+    rollingUpdate:
+      maxSurge: 1
+    type: RollingUpdate
+  serverConfig:
+    cloudProviderName: aws
+    cni: calico
+    etcd:
+      backupConfig:
+        retention: "10"
+        scheduleCron: '*/15 * * * *'
+  version: v1.28.12+rke2r1
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+kind: AWSMachineTemplate
+metadata:
+  name: rke2-aws-control-plane
+  namespace: default
+spec:
+  template:
+    spec:
+      ami:
+        id: ami-046dea9abe59cb74f
+      iamInstanceProfile: control-plane.cluster-api-provider-aws.sigs.k8s.io
+      instanceType: t3a.large
+      rootVolume:
+        size: 50
+      sshKeyName: SuseKeyPair
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: rke2-aws-md-0
+  namespace: default
+spec:
+  clusterName: rke2-aws
+  replicas: 1
+  selector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: rke2-aws
+  template:
+    metadata:
+      labels:
+        cluster.x-k8s.io/cluster-name: rke2-aws
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: RKE2ConfigTemplate
+          name: rke2-aws-md-0
+      clusterName: rke2-aws
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+        kind: AWSMachineTemplate
+        name: rke2-aws-md-0
+      version: v1.28.12+rke2r1
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+kind: AWSMachineTemplate
+metadata:
+  name: rke2-aws-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      ami:
+        id: ami-046dea9abe59cb74f
+      iamInstanceProfile: nodes.cluster-api-provider-aws.sigs.k8s.io
+      instanceType: t3a.large
+      rootVolume:
+        size: 50
+      sshKeyName: SuseKeyPair
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: RKE2ConfigTemplate
+metadata:
+  name: rke2-aws-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      agentConfig:
+        airGapped: true
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+kind: AWSClusterControllerIdentity
+metadata:
+  name: default
+  namespace: default
+spec:
+  allowedNamespaces:
+    list:
+    - default
